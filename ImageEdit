@@ -1,0 +1,225 @@
+PImage imgOrig, imgMod;
+
+final color BACKGROUND = color(192);
+
+int saveCounter = 0;
+
+
+static final String[] IMG_EXTS = {
+  ".gif", ".png", ".jpg"
+};
+String filter="";
+
+
+void setup() {
+  size(600, 600);
+  noLoop();
+  background(BACKGROUND);
+
+  for (String s : IMG_EXTS) {
+    filter+=("*"+s+";");
+  }
+}
+
+void draw() {
+  if (imgMod != null) {
+    drawHelper();
+    noLoop();
+  }
+}
+
+void drawHelper() { 
+  background(BACKGROUND);
+  if (imgMod != null) {
+    imageMode(CENTER);
+    image(imgMod, width/2, height/2);
+  }
+  loop();
+}
+
+
+void scaleTheImage() {
+  if (imgMod.width < imgMod.height) {
+    imgMod.resize(0, height);
+  } else {  
+    imgMod.resize(width, 0);
+  }
+}
+
+
+
+
+void keyPressed(KeyEvent e) {
+
+
+  if (e.getKey() == 'l') { //load image
+    selectInput("Select an image file to modify:", "processSelectedFile", new File(filter.substring(0, filter.length()-1)));
+  }
+
+
+  if (imgMod == null) return;
+
+
+  if (e.getKey() == '1') { //make it "bluescale"
+    bluescaleIt();
+    drawHelper();
+  }
+  if (e.getKey() == '2') { //make it "grayscale"
+    grayscaleIt();
+    drawHelper();
+  }
+  if (e.getKey() == '3') { //rotate the hues by 180 degrees
+    hueRotateIt();
+    drawHelper();
+  }
+  if (e.getKey() == '4') { //draw a border around the image
+    borderIt();
+    drawHelper();
+  }
+  if (e.getKey() == '5') { //draw a rainbow stripe through the center of the image
+    rainbowIt();
+    drawHelper();
+  }
+
+
+
+  if (e.getKey() == 'r') {
+    imgMod = imgOrig.copy();
+    scaleTheImage();
+    drawHelper();
+  }
+
+  if (e.getKey() == 's') {
+    imgMod.save("img-"+saveCounter+".png");
+    saveCounter++;
+    scaleTheImage();
+    drawHelper();
+  }
+}
+
+
+
+
+
+void processSelectedFile(File selection) {
+  if (selection == null) {
+    println("Window was closed or the user hit cancel.");
+  } else {
+    boolean valid = false;
+    String theFile = selection.getAbsolutePath();
+    String theSuffix = theFile.substring(theFile.length()-4);
+    for (int i=0; i<IMG_EXTS.length; i++) {
+      if (theSuffix.equals(IMG_EXTS[i])) {
+        valid = true;
+      }
+    }
+    if (valid) {
+      imgOrig = loadImage(theFile);
+      imgMod = imgOrig.copy();
+      scaleTheImage();
+      loop();
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+void bluescaleIt() {
+  for(int x = 0;x < imgMod.width;x++){
+    for(int y = 0;y < imgMod.height;y++){
+     color colorBlue = imgMod.get(x,y);
+     float b = blue(colorBlue);
+     color pasteBlue = color(0,0,b);
+     imgMod.set(x,y,color(pasteBlue));
+    }
+  }
+}
+
+
+
+
+void grayscaleIt() {
+    colorMode(RGB, 255, 255, 255);
+  for(int x = 0;x < imgMod.width;x++){
+    for(int y = 0;y < imgMod.height;y++){
+     color colorPixel = imgMod.get(x,y);
+     float r = red(colorPixel);
+     float g = green(colorPixel);
+     float b = blue(colorPixel);
+     float greyScale = (r+g+b)/3;
+     imgMod.set(x, y,(color(greyScale, greyScale,greyScale)));
+    }
+  }
+  drawHelper();
+}
+
+
+
+
+void hueRotateIt() {
+  pushStyle();
+  //Your code here...
+  colorMode(HSB,360,100,100);
+  for(int x = 0;x < imgMod.width;x++){
+    for(int y = 0;y < imgMod.height;y++){
+      color huePixels = imgMod.get(x,y);
+      float coolHue = hue(huePixels);
+      float sat = saturation(huePixels);
+      float bright = brightness(huePixels);
+      imgMod.set(x,y, color((coolHue+180)%360,sat,bright));
+    }
+  }
+  popStyle();
+}
+
+
+
+
+
+void borderIt() {
+  for(int x = 0; x <10;x++){
+   for(int y = 0;y < imgMod.height;y++){
+     imgMod.set(x,y, color(0,0,0));
+  }
+}
+  for(int x = 0; x <imgMod.width;x++){
+   for(int y = 0;y < 10;y++){
+     imgMod.set(x,y, color(0,0,0));
+  }
+}
+  for(int x = 0; x <imgMod.width;x++){
+   for(int y = imgMod.height-10;y < imgMod.height;y++){
+     imgMod.set(x,y, color(0,0,0));
+  }
+}
+  for(int x = imgMod.width-10; x<imgMod.width;x++){
+   for(int y = 0;y < imgMod.height;y++){
+     imgMod.set(x,y, color(0,0,0));
+  }
+}
+drawHelper();
+}
+
+
+
+
+void rainbowIt() {
+  pushStyle();
+  colorMode(HSB, 360, 100, 100);
+  for(int x = 0;x < imgMod.width;x++){
+    for(int y = (imgMod.height-10)/2;y < (imgMod.height+10)/2;y++){
+      float length = x;
+      noStroke();
+      float rainStrip = map(length, 0, width, 0, 360);
+      imgMod.set(x,y, color(rainStrip, 100, 100));
+    }
+  }
+  drawHelper();
+  popStyle();
+}
